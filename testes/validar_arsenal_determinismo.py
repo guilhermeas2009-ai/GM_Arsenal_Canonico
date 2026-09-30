@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
 Validador Determinístico de Integridade Sintática e Arquitetural do GM_Arsenal_Canonico
-Garante conformidade estrita com Modo Ponytail, Clean Code (<50 linhas por função) e balanceamento sintático.
+Garante conformidade estrita com Modo Ponytail, Clean Code (<50 linhas por função),
+balanceamento sintático e integridade do catálogo de módulos e skills para GameMaker LTS 2026.
 """
 
 import ast
@@ -74,6 +75,15 @@ def validar_script_python(caminho_py):
     except Exception as e:
         return False, f"Erro de sintaxe Python em {caminho_py}: {e}"
 
+def validar_skill_markdown(caminho_md):
+    with open(caminho_md, "r", encoding="utf-8") as f:
+        conteudo = f.read()
+    if not conteudo.startswith("---"):
+        return False, f"Skill sem frontmatter YAML: {caminho_md}"
+    if "name:" not in conteudo or "description:" not in conteudo:
+        return False, f"Skill sem campos obrigatórios (name, description): {caminho_md}"
+    return True, "Skill válida"
+
 def executar_validacao():
     print("=" * 65)
     print("🛡️ VALIDADOR CANÔNICO: GM_ARSENAL_CANONICO (LTS 2026)")
@@ -89,21 +99,31 @@ def executar_validacao():
         "mod_camera_retro_3d/scr_camera_retro_3d.gml",
         "mod_combate_feedback/scr_combate_feedback.gml",
         "mod_hud_dinamico/scr_hud_dinamico.gml",
-        "mod_eidolon_ataques/scr_eidolon_ataques.gml",
+        "mod_habilidades_combate/scr_habilidades_combate.gml",
         "mod_geometria_3d/scr_geometria_3d.gml",
         "mod_pipeline_forja_sprites/pipeline_forja_entidade.py"
     ]
 
-    total_arquivos = 0
+    skills_esperadas = [
+        "skills/gamemaker-expert/SKILL.md",
+        "skills/sprite-forge/SKILL.md",
+        "skills/pixel-art/SKILL.md",
+        "skills/pixel-art-sprites/SKILL.md",
+        "skills/pixel-art-generation/SKILL.md",
+        "skills/sprite-processing/SKILL.md"
+    ]
+
+    total_itens = 0
     todos_erros = []
 
+    print("📦 MÓDULOS DE ENGENHARIA & SHADERS:")
     for rel_path in modulos_esperados:
         full_path = os.path.join(BASE_DIR, rel_path)
         if not os.path.exists(full_path):
             todos_erros.append(f"Arquivo obrigatório não encontrado: {rel_path}")
             continue
 
-        total_arquivos += 1
+        total_itens += 1
         with open(full_path, "r", encoding="utf-8") as f:
             conteudo = f.read()
 
@@ -128,6 +148,20 @@ def executar_validacao():
             else:
                 print(f"[OK] Clean Code (<50 linhas/func): {rel_path}")
 
+    print("\n🧠 SKILLS DE PRODUÇÃO DE JOGOS:")
+    for rel_path in skills_esperadas:
+        full_path = os.path.join(BASE_DIR, rel_path)
+        if not os.path.exists(full_path):
+            todos_erros.append(f"Skill obrigatória não encontrada: {rel_path}")
+            continue
+
+        total_itens += 1
+        ok, msg = validar_skill_markdown(full_path)
+        if not ok:
+            todos_erros.append(msg)
+        else:
+            print(f"[OK] Skill YAML & Integridade: {rel_path}")
+
     print("-" * 65)
     if todos_erros:
         print(f"❌ FALHA: {len(todos_erros)} erro(s) encontrados:")
@@ -135,7 +169,7 @@ def executar_validacao():
             print(f"  • {err}")
         sys.exit(1)
     else:
-        print(f"🏆 SUCESSO: Todos os {total_arquivos} módulos canônicos foram validados!")
+        print(f"🏆 SUCESSO: Todos os {total_itens} módulos e skills canônicas foram validados!")
         print("=" * 65)
         sys.exit(0)
 

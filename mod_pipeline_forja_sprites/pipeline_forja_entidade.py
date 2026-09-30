@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 """
-🧙‍♂️ MERLIN / TÁVOLA REDONDA — PIPELINE DE FORJA DE ENTIDADES HD (PENITENTES)
-Pipeline padronizado e reutilizável para criação de novos personagens e inimigos.
-Converte concept arts em spritesheets anatômicos com metadados do GameMaker LTS 2026.
+Pipeline Canônico de Forja e Processamento de Sprites (GameMaker LTS 2026)
+Converte concept arts e recortes em spritesheets anatômicos com metadados VERSIONED para GameMaker LTS 2026.
 """
 
 import os, sys, math, json, uuid, argparse
@@ -26,7 +25,7 @@ TIERS_CANONICOS = {
         "yorigin": 136,
         "largura_3d": 48,
         "altura_3d": 56,
-        "descricao": "Bruiser / Carrasco / Mini-Chefe"
+        "descricao": "Inimigo Pesado / Bruiser / Mini-Chefe"
     },
     "chefe": {
         "largura": 160,
@@ -35,7 +34,7 @@ TIERS_CANONICOS = {
         "yorigin": 186,
         "largura_3d": 64,
         "altura_3d": 80,
-        "descricao": "Colosso / Eidolon / Chefe de Círculo"
+        "descricao": "Grande Entidade / Chefe / Colosso"
     }
 }
 
@@ -331,20 +330,20 @@ def gravar_no_gamemaker(caminho_projeto, nome_sprite, frames, cfg_tier):
     print(f"✅ Sprite '{nome_sprite}' ({w}x{h}px, {len(frames)} frames) gravado e registrado com sucesso no GameMaker!")
 
 def main():
-    parser = argparse.ArgumentParser(description="Pipeline de Forja de Entidades HD - Penitentes")
-    parser.add_argument("--imagem", required=True, help="Caminho para a imagem de concept art mestra")
-    parser.add_argument("--nome", required=True, help="Nome do sprite no GameMaker (ex: spr_inimigo_carrasco_hd)")
+    parser = argparse.ArgumentParser(description="Pipeline Canônico de Forja e Processamento de Sprites - GameMaker LTS 2026")
+    parser.add_argument("--imagem", required=True, help="Caminho para a imagem ou recorte mestre")
+    parser.add_argument("--nome", required=True, help="Nome do sprite no GameMaker (ex: spr_personagem_idle)")
     parser.add_argument("--tier", choices=["comum", "elite", "chefe"], default="elite", help="Tier de escala da entidade")
     parser.add_argument("--tolerancia", type=int, default=45, help="Tolerância de cor euclidiana para isolamento de fundo")
     parser.add_argument("--frames", type=int, default=4, help="Número de frames de animação a gerar")
-    parser.add_argument("--projeto", default="/mnt/c/GameMakerProjects/PenitenciaLTS", help="Caminho do projeto GameMaker")
+    parser.add_argument("--projeto", required=True, help="Caminho raiz do projeto GameMaker (.yyp)")
 
     args = parser.parse_args()
 
     assert os.path.isfile(args.imagem), f"Arquivo de imagem não encontrado: {args.imagem}"
     cfg_tier = TIERS_CANONICOS[args.tier]
 
-    print(f"🧙‍♂️ Processando entidade '{args.nome}' no Tier '{args.tier}' ({cfg_tier['largura']}x{cfg_tier['altura']}px)...")
+    print(f"🎨 Processando entidade '{args.nome}' no Tier '{args.tier}' ({cfg_tier['largura']}x{cfg_tier['altura']}px)...")
     img_orig = Image.open(args.imagem)
     img_isolada = isolar_silhueta_adaptativa(img_orig, tolerancia=args.tolerancia)
     img_grid = normalizar_em_grid(img_isolada, cfg_tier["largura"], cfg_tier["altura"])
