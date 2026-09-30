@@ -4,6 +4,7 @@ Validador Determinístico de Integridade Sintática e Arquitetural do GM_Arsenal
 Garante conformidade estrita com Modo Ponytail, Clean Code (<50 linhas por função) e balanceamento sintático.
 """
 
+import ast
 import os
 import re
 import sys
@@ -56,7 +57,6 @@ def validar_funcoes_clean_code(caminho_gml):
             linhas_funcao += 1
             nivel_chaves += linha.count('{') - linha.count('}')
             if nivel_chaves <= 0 and '{' in ''.join(linhas[idx-linhas_funcao:idx]):
-                # Encerrou a função
                 if linhas_funcao > 50:
                     erros.append(f"Função '{nome_funcao}' excede 50 linhas ({linhas_funcao} linhas) no arquivo {os.path.basename(caminho_gml)}")
                 em_funcao = False
@@ -64,6 +64,15 @@ def validar_funcoes_clean_code(caminho_gml):
                 linhas_funcao = 0
 
     return erros
+
+def validar_script_python(caminho_py):
+    with open(caminho_py, "r", encoding="utf-8") as f:
+        conteudo = f.read()
+    try:
+        ast.parse(conteudo)
+        return True, "Sintaxe Python válida (AST)"
+    except Exception as e:
+        return False, f"Erro de sintaxe Python em {caminho_py}: {e}"
 
 def executar_validacao():
     print("=" * 65)
@@ -77,7 +86,12 @@ def executar_validacao():
         "mod_billboard_3d/scr_billboard_3d.gml",
         "mod_combate_souls/scr_combate_souls.gml",
         "mod_room_loader_runtime/scr_room_loader_runtime.gml",
-        "mod_camera_retro_3d/scr_camera_retro_3d.gml"
+        "mod_camera_retro_3d/scr_camera_retro_3d.gml",
+        "mod_combate_feedback/scr_combate_feedback.gml",
+        "mod_hud_dinamico/scr_hud_dinamico.gml",
+        "mod_eidolon_ataques/scr_eidolon_ataques.gml",
+        "mod_geometria_3d/scr_geometria_3d.gml",
+        "mod_pipeline_forja_sprites/pipeline_forja_entidade.py"
     ]
 
     total_arquivos = 0
@@ -92,6 +106,14 @@ def executar_validacao():
         total_arquivos += 1
         with open(full_path, "r", encoding="utf-8") as f:
             conteudo = f.read()
+
+        if rel_path.endswith(".py"):
+            ok, msg = validar_script_python(full_path)
+            if not ok:
+                todos_erros.append(msg)
+            else:
+                print(f"[OK] Validação AST Python: {rel_path}")
+            continue
 
         ok, msg = checar_balanceamento(conteudo, rel_path)
         if not ok:
